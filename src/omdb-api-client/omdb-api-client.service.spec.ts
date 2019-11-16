@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OmdbApiClientService } from './omdb-api-client.service';
 import { HttpService, CACHE_MANAGER } from '@nestjs/common';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '../common/config/config.service';
 
 import { caching, Cache } from "cache-manager";
 import { of } from 'rxjs';

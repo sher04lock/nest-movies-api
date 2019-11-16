@@ -1,7 +1,7 @@
 import { HttpService, Injectable } from '@nestjs/common';
 import { Cacheable } from '../common/cache/cacheable';
 import { logger } from '../common/logger/LoggerProvider';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '../common/config/config.service';
 import { Cache } from '../common/cache/cache.decorator';
 import { MONTH } from '../common/cache/constants';
 
