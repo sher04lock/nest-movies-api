@@ -5,6 +5,7 @@ import { logger } from '../common/logger/LoggerProvider';
 import { OmdbApiClientService } from '../omdb-api-client/omdb-api-client.service';
 import { IMovieRating, MovieRatingsRepository } from '../repositories/MovieRatingsRepository';
 import { IS3ObjectParams, MovieRepository } from '../repositories/MovieRepository';
+import { MovieViewsRepository } from '../repositories/MovieViewsRepository';
 import { IQueryParams } from '../repositories/Repository';
 import ytdl = require('ytdl-core');
 import request = require('request');
@@ -33,6 +34,7 @@ export class MoviesService {
     constructor(
         private readonly repository: MovieRepository,
         private readonly ratingsRepository: MovieRatingsRepository,
+        private readonly viewsRepository: MovieViewsRepository,
         private readonly omdbApiClient: OmdbApiClientService,
         @Inject('MEMORY_CACHE_PROVIDER') private readonly memoryCache: Cache,
     ) { }
@@ -117,5 +119,13 @@ export class MoviesService {
         } catch (err) {
             logger.error(err);
         }
+    }
+
+    public async getMovieViews(id: number) {
+        return this.viewsRepository.getMovieViews(id);
+    }
+
+    public async incrementMovieViewsCount(movieId: number, userId: number | null) {
+        return this.viewsRepository.incrementViewCount(movieId, userId);
     }
 }

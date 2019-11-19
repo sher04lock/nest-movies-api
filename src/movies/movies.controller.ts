@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe, Req, Headers, Res, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Req, Headers, Res, Query, Put, Header } from '@nestjs/common';
 import { MoviesService } from './movies.service';
 import { Request, Response } from 'express';
 import { DefaultsTo } from '../common/pipes/defaults-to.pipe';
@@ -19,6 +19,25 @@ export class MoviesController {
     @Get(':id')
     public getMovieDetails(@Param('id', new ParseIntPipe()) id: number) {
         return this.moviesService.getMovie(id);
+    }
+
+    @Get(':id/views')
+    public getMovieViews(@Param('id', new ParseIntPipe()) id: number) {
+        return this.moviesService.getMovieViews(id);
+    }
+
+    @Put(':id/views')
+    public updateViewCount(
+        @Param('id', new ParseIntPipe()) movieId: number,
+        @Headers('userId') userIdString: string,
+    ) {
+        let userId: number | null = parseInt(userIdString, 10);
+
+        if (isNaN(userId)) {
+            userId = null;
+        }
+
+        return this.moviesService.incrementMovieViewsCount(movieId, userId);
     }
 
     @Get(':id/stream')

@@ -46,6 +46,7 @@ export class OmdbApiClientService extends Cacheable {
 
         } catch (err) {
             logger.error(`${this.constructor.name}.getMovieDetails error`, err);
+            throw err;
         }
     }
 }

@@ -28,20 +28,26 @@ export function Cache(options?: { key?: string, ttl: number, useFirstParamAsKey?
 
             let wasCached = true;
 
-            const value = await cache.wrap(cacheKey,
-                () => {
-                    wasCached = false;
-                    return originalMethod.apply(this, args);
-                });
+            try {
 
-            if (wasCached) {
-                logger.debug(`Returning '${cacheKey}' from cache.`);
-            } else {
-                logger.debug(`Cached key: '${cacheKey}'.`);
+                const value = await cache.wrap(cacheKey,
+                    () => {
+                        wasCached = false;
+                        return originalMethod.apply(this, args);
+                    });
 
+                if (wasCached) {
+                    logger.debug(`Returning '${cacheKey}' from cache.`);
+                } else {
+                    logger.debug(`Cached key: '${cacheKey}'.`);
+
+                }
+
+                return value;
+            } catch (err) {
+                logger.error(`Cache decorator for ${cacheKey} failed`, err);
+                return {};
             }
-
-            return value;
 
             const cacheResult = await cache.get(cacheKey);
 
