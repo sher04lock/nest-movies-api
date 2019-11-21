@@ -1,5 +1,5 @@
 import { IRepository } from "./IRepository";
-import { Db, FilterQuery, FindOneOptions, MongoClient } from "mongodb";
+import { Db, FilterQuery, FindOneOptions, MongoClient, UpdateOneOptions, UpdateQuery } from "mongodb";
 import { Injectable, Inject } from "@nestjs/common";
 import { Cacheable } from "../common/cache/cacheable";
 
@@ -42,6 +42,14 @@ export abstract class Repository<T> extends Cacheable implements IRepository<T> 
         return this.cache.wrap(cacheKey,
             () => this.db.collection(this.collectionName).findOne<T>(filter, options),
         );
+    }
+
+    async updateOne(
+        filter: FilterQuery<T>,
+        update: UpdateQuery<T> | Partial<T>,
+        options?: UpdateOneOptions,
+    ) {
+        return this.db.collection(this.collectionName).updateOne(filter, update, options);
     }
 
     protected getCacheKey(...args) {

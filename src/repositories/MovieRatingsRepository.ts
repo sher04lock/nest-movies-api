@@ -38,6 +38,7 @@ export class MovieRatingsRepository extends Repository<IMovieRating> {
                 },
             },
             { $unwind: "$movie" },
+            { $match: { "movie.hidden": { $ne: true } } },
             {
                 $project: {
                     id: "$_id",

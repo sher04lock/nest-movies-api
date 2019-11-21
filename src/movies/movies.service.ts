@@ -40,7 +40,7 @@ export class MoviesService {
     ) { }
 
     public async getMovie(id: number) {
-        const movie = await this.repository.findOne({ movie_id: id });
+        const movie = await this.repository.findOne({ movie_id: id, hidden: { $ne: true } });
 
         if (!movie) {
             throw new NotFoundException(`movie with id ${id} not found`);
@@ -127,5 +127,9 @@ export class MoviesService {
 
     public async incrementMovieViewsCount(movieId: number, userId: number | null) {
         return this.viewsRepository.incrementViewCount(movieId, userId);
+    }
+
+    public async changeMovieVisibility(movieId: number, hidden: boolean) {
+        return this.repository.updateOne({ movie_id: movieId }, { $set: { hidden } });
     }
 }

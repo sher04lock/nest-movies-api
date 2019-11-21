@@ -20,6 +20,8 @@ export interface IMovie {
     imdb_id: string;
 
     s3?: IS3ObjectParams;
+
+    hidden?: boolean;
 }
 
 @Injectable()

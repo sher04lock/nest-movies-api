@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe, Req, Headers, Res, Query, Put, Header } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Req, Headers, Res, Query, Put, Post, Body } from '@nestjs/common';
 import { MoviesService } from './movies.service';
 import { Request, Response } from 'express';
 import { DefaultsTo } from '../common/pipes/defaults-to.pipe';
@@ -38,6 +38,14 @@ export class MoviesController {
         }
 
         return this.moviesService.incrementMovieViewsCount(movieId, userId);
+    }
+
+    @Post(':id/hidden')
+    public setMovieVisibility(
+        @Param('id', new ParseIntPipe()) movieId: number,
+        @Body('hidden') hidden: boolean,
+    ) {
+        return this.moviesService.changeMovieVisibility(movieId, hidden);
     }
 
     @Get(':id/stream')
