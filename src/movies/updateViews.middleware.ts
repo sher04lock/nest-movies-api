@@ -9,10 +9,11 @@ export class UpdateViewsMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         const movieId = parseInt(req.params.id, 10);
-        let userId = parseInt(req.header("userId"), 10);
+        let userId = req.header("user_id") || null;
 
-        if (isNaN(userId)) {
-            userId = null;
+        if (isNaN(movieId)) {
+            next();
+            return;
         }
 
         try {

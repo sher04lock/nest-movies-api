@@ -5,7 +5,7 @@ import { Injectable } from "@nestjs/common";
 export interface IMovieRating {
     _id: ObjectID;
     movie_id: number;
-    user_id: number;
+    user_id: number | string;
     rating: number;
     title: string;
     genre: string;

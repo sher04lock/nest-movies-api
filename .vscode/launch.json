@@ -5,6 +5,27 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Build & Run",
+            "type": "node",
+            "request": "launch",
+            "args": [
+                "${workspaceRoot}/dist/main.js"
+            ],
+            "runtimeArgs": [
+                "-r",
+                "dotenv/config"
+            ],
+            "cwd": "${workspaceRoot}",
+            "protocol": "inspector",
+            "env": {
+                "ENTERPRYZE_ENVIRONMENT_TYPE": "Test",
+                "ENTERPRYZE_LOG_LEVEL": "debug",
+                "ENTERPRYZE_LOCAL_DEV_ENV": "true"
+            },
+            "console": "integratedTerminal",
+            "preLaunchTask": "npm: build",
+        },
+        {
             "type": "node",
             "request": "attach",
             "name": "Attach",

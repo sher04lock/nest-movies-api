@@ -34,7 +34,8 @@ export function Cache(options?: { key?: string, ttl: number, useFirstParamAsKey?
                     () => {
                         wasCached = false;
                         return originalMethod.apply(this, args);
-                    });
+                    },
+                    options);
 
                 if (wasCached) {
                     logger.debug(`Returning '${cacheKey}' from cache.`);

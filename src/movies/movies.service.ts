@@ -9,6 +9,7 @@ import { MovieViewsRepository } from '../repositories/MovieViewsRepository';
 import { IQueryParams } from '../repositories/Repository';
 import ytdl = require('ytdl-core');
 import request = require('request');
+import { MEMORY_CACHE_PROVIDER } from '../common/providers/constants';
 
 interface IGetS3StreamParams {
     s3ObjectParams: IS3ObjectParams;
@@ -26,6 +27,12 @@ interface IYTVideoSource {
     youtube_id: string;
 }
 
+export interface ITimeUpdate {
+    movieId: number;
+    currentTime: number;
+    userId: string;
+}
+
 @Injectable()
 export class MoviesService {
 
@@ -36,25 +43,35 @@ export class MoviesService {
         private readonly ratingsRepository: MovieRatingsRepository,
         private readonly viewsRepository: MovieViewsRepository,
         private readonly omdbApiClient: OmdbApiClientService,
-        @Inject('MEMORY_CACHE_PROVIDER') private readonly memoryCache: Cache,
+        @Inject(MEMORY_CACHE_PROVIDER) private readonly memoryCache: Cache,
     ) { }
 
-    public async getMovie(id: number) {
-        const movie = await this.repository.findOne({ movie_id: id, hidden: { $ne: true } });
+    public async getMovie(id: number, { user_id }: { user_id?: number | string } = {}) {
+        const movie = await this.repository.findOne(
+            { movie_id: id, hidden: { $ne: true } },
+            {},
+            { useCache: true, key: `movie:${id}` }
+        );
 
         if (!movie) {
             throw new NotFoundException(`movie with id ${id} not found`);
         }
 
-        const imdbDetails = await this.getImdbDetails(movie.imdb_id);
+        const getUserRatings = () => user_id
+            ? this.ratingsRepository.findOne({ movie_id: id, user_id }, { projection: { rating: 1 } })
+            : Promise.resolve({});
+
+
+        const [userRating, imdbDetails] = await Promise.all([getUserRatings(), this.getImdbDetails(movie.imdb_id)]);
 
         return {
             ...movie,
+            ...userRating,
             details: imdbDetails,
         };
     }
 
-    public async getMostViewedMovies(params: IQueryParams) {
+    public async getMostRatedMovies(params: IQueryParams) {
 
         const movies: Array<IMovieRating & { imdb_id?: string, poster?: string }> = await this.ratingsRepository.getMostRatedMovies(params);
 
@@ -64,6 +81,17 @@ export class MoviesService {
         }
 
         return movies;
+    }
+
+    public async getLastViewedMovies(user_id: string) {
+        const lastViewedMovies = await this.viewsRepository.getLastViewedMovies(user_id);
+
+        for (const movie of lastViewedMovies) {
+            const details = await this.getImdbDetails(movie.imdb_id);
+            (movie as any).poster = details.Poster;
+        }
+
+        return lastViewedMovies;
     }
 
     public async getVideoSource(id: number): Promise<IS3VideoSource | IYTVideoSource> {
@@ -125,11 +153,37 @@ export class MoviesService {
         return this.viewsRepository.getMovieViews(id);
     }
 
-    public async incrementMovieViewsCount(movieId: number, userId: number | null) {
+    public async incrementMovieViewsCount(movieId: number, userId: number | string | null) {
+        if (!await this.repository.count({ movie_id: movieId })) {
+            return;
+        }
+        // Don't set view cound for nonexisting movie.
         return this.viewsRepository.incrementViewCount(movieId, userId);
     }
 
     public async changeMovieVisibility(movieId: number, hidden: boolean) {
         return this.repository.updateOne({ movie_id: movieId }, { $set: { hidden } });
+    }
+
+    public async updateProgress({ movieId, userId, currentTime }: ITimeUpdate) {
+        // TODO: update IN USER, so probably in user.service.ts:
+        // {moviesProgress: [movie_id: movieId, currentTime: currentTime]   }
+        // return this.repository.updateOne({})
+    }
+
+    public async rateMovie(movieRating: Pick<IMovieRating, 'movie_id' | 'user_id' | 'rating'>) {
+        const { movie_id, user_id, rating } = movieRating;
+
+        const { title, genresString } = await this.getMovie(movie_id);
+
+        await this.ratingsRepository.updateOne({ movie_id, user_id }, {
+            $set: {
+                movie_id,
+                user_id,
+                rating,
+                title,
+                genre: genresString
+            }
+        }, { upsert: true });
     }
 }
