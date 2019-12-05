@@ -2,14 +2,16 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
 import { Cache } from 'cache-manager';
 import { logger } from '../common/logger/LoggerProvider';
-import { OmdbApiClientService } from '../omdb-api-client/omdb-api-client.service';
+import { OmdbApiClientService, IOmdbMovieDetails } from '../omdb-api-client/omdb-api-client.service';
 import { IMovieRating, MovieRatingsRepository } from '../repositories/MovieRatingsRepository';
-import { IS3ObjectParams, MovieRepository } from '../repositories/MovieRepository';
+import { IS3ObjectParams, MovieRepository, IMovieDocument } from '../repositories/MovieRepository';
 import { MovieViewsRepository } from '../repositories/MovieViewsRepository';
 import { IQueryParams } from '../repositories/Repository';
 import ytdl = require('ytdl-core');
 import request = require('request');
 import { MEMORY_CACHE_PROVIDER } from '../common/providers/constants';
+import { IUserDocument } from '../repositories/UserRepository';
+import { ObjectId } from 'mongodb';
 
 interface IGetS3StreamParams {
     s3ObjectParams: IS3ObjectParams;
@@ -33,6 +35,40 @@ export interface ITimeUpdate {
     userId: string;
 }
 
+
+export class Movie implements IMovie {
+    id: number;
+    poster: string;
+    plot: string;
+    votes: string;
+    _id: ObjectId;
+    movie_id: number;
+    title: string;
+    genres: string[];
+    genresString: string;
+    year: string;
+    avgRating?: number;
+    youtube_id: string;
+    imdb_id: string;
+    s3?: IS3ObjectParams;
+    hidden?: boolean;
+
+    constructor(movieDocument: Partial<IMovieDocument>, omdbDetails: IOmdbMovieDetails) {
+        Object.assign(this, movieDocument);
+        this.poster = omdbDetails.Poster;
+        this.plot = omdbDetails.Plot;
+        this.votes = omdbDetails.imdbVotes;
+        this.id = this.movie_id;
+    }
+}
+
+export interface IMovie extends IMovieDocument {
+    id: number;
+    poster: string;
+    plot: string;
+    votes: string;
+}
+
 @Injectable()
 export class MoviesService {
 
@@ -46,52 +82,59 @@ export class MoviesService {
         @Inject(MEMORY_CACHE_PROVIDER) private readonly memoryCache: Cache,
     ) { }
 
-    public async getMovie(id: number, { user_id }: { user_id?: number | string } = {}) {
-        const movie = await this.repository.findOne(
+    public async getMovie(id: number, { user }: { user?: IUserDocument } = {}) {
+        const movieDocument = await this.repository.findOne(
             { movie_id: id, hidden: { $ne: true } },
             {},
             { useCache: true, key: `movie:${id}` }
         );
 
-        if (!movie) {
+        if (!movieDocument) {
             throw new NotFoundException(`movie with id ${id} not found`);
         }
 
-        const getUserRatings = () => user_id
-            ? this.ratingsRepository.findOne({ movie_id: id, user_id }, { projection: { rating: 1 } })
-            : Promise.resolve({});
-
-
-        const [userRating, imdbDetails] = await Promise.all([getUserRatings(), this.getImdbDetails(movie.imdb_id)]);
+        const [userRating, [movie]] = await Promise.all([
+            this.getUserRating(user, movieDocument.movie_id),
+            this.fillMoviesDetails([movieDocument]),
+        ]);
 
         return {
             ...movie,
-            ...userRating,
-            details: imdbDetails,
+            userRating: userRating?.rating,
+            user,
         };
     }
 
     public async getMostRatedMovies(params: IQueryParams) {
+        const movies: Array<IMovieRating & { imdb_id: string }> = await this.ratingsRepository.getMostRatedMovies(params);
 
-        const movies: Array<IMovieRating & { imdb_id?: string, poster?: string }> = await this.ratingsRepository.getMostRatedMovies(params);
-
-        for (const movie of movies) {
-            const details = await this.getImdbDetails(movie.imdb_id);
-            movie.poster = details.Poster;
-        }
-
-        return movies;
+        return this.fillMoviesDetails(movies);
     }
 
-    public async getLastViewedMovies(user_id: string) {
-        const lastViewedMovies = await this.viewsRepository.getLastViewedMovies(user_id);
 
-        for (const movie of lastViewedMovies) {
-            const details = await this.getImdbDetails(movie.imdb_id);
-            (movie as any).poster = details.Poster;
+    public async getLastViewedMovies(user: IUserDocument) {
+        if (!user) {
+            return [];
         }
 
-        return lastViewedMovies;
+        const lastViewedMovies = await this.viewsRepository.getLastViewedMovies(user._id.toHexString());
+
+        return this.fillMoviesDetails(lastViewedMovies);
+    }
+
+    public async getSavedMovies(user: IUserDocument) {
+        const savedMovies = user?.savedForLater || [];
+        let movies = await this.repository.find({ movie_id: { $in: savedMovies } }, { projection: { _id: 0, movie_id: 1, imdb_id: 1, title: 1 } });
+
+        return this.fillMoviesDetails(movies);
+    }
+
+    public async getUserRating(user: IUserDocument, movie_id: number) {
+        if (!user) {
+            return {} as IMovieRating;
+        }
+
+        return this.ratingsRepository.findOne({ movie_id, user_id: user._id.toHexString() }, { projection: { rating: 1 } })
     }
 
     public async getVideoSource(id: number): Promise<IS3VideoSource | IYTVideoSource> {
@@ -141,12 +184,22 @@ export class MoviesService {
         return request({ url: videoFormat.url, method: "GET" });
     }
 
-    public async getImdbDetails(imdbId: string) {
+    public async getImdbDetails(imdbId: string): Promise<IOmdbMovieDetails> {
         try {
             return this.omdbApiClient.getMovieDetails(imdbId);
         } catch (err) {
             logger.error(err);
+            return {} as IOmdbMovieDetails;
         }
+    }
+
+    protected async fillMoviesDetails(movies: Pick<IMovieDocument, "imdb_id">[]): Promise<IMovie[]> {
+        const moviesWithDetails = movies.map(async movie => {
+            const details = await this.getImdbDetails(movie.imdb_id);
+            return new Movie(movie, details);
+        });
+
+        return Promise.all(moviesWithDetails);
     }
 
     public async getMovieViews(id: number) {
