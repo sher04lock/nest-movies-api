@@ -5,6 +5,8 @@ import { DefaultsTo } from '../common/pipes/defaults-to.pipe';
 import { logger } from '../common/logger/LoggerProvider';
 import { IMovieRating } from '../repositories/MovieRatingsRepository';
 import { AuthGuard } from '@nestjs/passport';
+import { User } from '../users/user.decorator';
+import { IUserDocument } from '../repositories/UserRepository';
 
 @Controller('movies')
 export class MoviesController {
@@ -21,10 +23,22 @@ export class MoviesController {
 
     @Get('/last-viewed')
     public getLastViewedMovies(
-        @Headers('user_id') user_id: string,
+        @User() user: IUserDocument,
         @Query('skip', new DefaultsTo(0), new ParseIntPipe()) skip: number,
         @Query('limit', new DefaultsTo(100), new ParseIntPipe()) limit: number,
     ) {
+        return this.moviesService.getLastViewedMovies(user);
+    }
+
+    @Get('/saved')
+    public getSavedMovies(
+        @User() user: IUserDocument,
+        @Query('skip', new DefaultsTo(0), new ParseIntPipe()) skip: number,
+        @Query('limit', new DefaultsTo(100), new ParseIntPipe()) limit: number,
+    ) {
+        return this.moviesService.getSavedMovies(user);
+    }
+
     @Get('/search')
     public search(
         @Query('q') term: string,
@@ -37,9 +51,9 @@ export class MoviesController {
     @Get(':id')
     public getMovieDetails(
         @Param('id', new ParseIntPipe()) id: number,
-        @Headers('user_id') user_id: string,
+        @User() user: IUserDocument,
     ) {
-        return this.moviesService.getMovie(id, { user_id });
+        return this.moviesService.getMovie(id, { user });
     }
 
     @Get(':id/views')
