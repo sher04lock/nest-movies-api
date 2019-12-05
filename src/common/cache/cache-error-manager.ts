@@ -1,5 +1,6 @@
 import { Injectable, Inject, CACHE_MANAGER } from "@nestjs/common";
 import { Cache } from 'cache-manager';
+import { logger } from "../logger/LoggerProvider";
 
 @Injectable()
 export class CacheErrorManager {
@@ -8,7 +9,7 @@ export class CacheErrorManager {
         const client = (cache as any)?.store?.getClient();
 
         client.on('error', (error) => {
-            console.info(error);
+            logger.error(error);
         });
     }
 }
