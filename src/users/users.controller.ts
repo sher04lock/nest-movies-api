@@ -1,4 +1,4 @@
-import { Controller, Headers, Request, UseGuards, Put, Body, Param } from '@nestjs/common';
+import { Controller, Put, Body, Param, Post } from '@nestjs/common';
 import { UsersService } from './users.service';
 
 
@@ -15,5 +15,14 @@ export class UsersController {
         @Body('currentTime') currentTime: number,
     ) {
         return this.userService.saveUserWatchProgress(user_id, movie_id, currentTime);
+    }
+
+    @Post('/:user_id/watch-later')
+    public async setSavedForLater(
+        @Param('user_id') user_id: string,
+        @Body('movie_id') movie_id: number,
+        @Body('savedForLater') savedForLater: boolean,
+    ) {
+        return this.userService.setSavedForLater(user_id, movie_id, savedForLater);
     }
 }
