@@ -186,4 +186,10 @@ export class MoviesService {
             }
         }, { upsert: true });
     }
+
+    public async searchMovie(term: string, params: IQueryParams) {
+        const movies = await this.repository.search(term, params)
+
+        return this.fillMoviesDetails(movies);
+    }
 }

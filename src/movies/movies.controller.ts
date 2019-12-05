@@ -25,7 +25,13 @@ export class MoviesController {
         @Query('skip', new DefaultsTo(0), new ParseIntPipe()) skip: number,
         @Query('limit', new DefaultsTo(100), new ParseIntPipe()) limit: number,
     ) {
-        return this.moviesService.getLastViewedMovies(user_id);
+    @Get('/search')
+    public search(
+        @Query('q') term: string,
+        @Query('skip', new DefaultsTo(0), new ParseIntPipe()) skip: number,
+        @Query('limit', new DefaultsTo(20), new ParseIntPipe()) limit: number,
+    ) {
+        return this.moviesService.searchMovie(term, { skip, limit });
     }
 
     @Get(':id')
