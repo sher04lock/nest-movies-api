@@ -5,6 +5,39 @@ import { ConfigService } from '../common/config/config.service';
 import { Cache } from '../common/cache/cache.decorator';
 import { MONTH } from '../common/cache/constants';
 
+export interface IOmdbMovieDetails {
+    Title: string;
+    Year: string;
+    Rated: string;
+    Released: string;
+    Runtime: string;
+    Genre: string;
+    Director: string;
+    Writer: string;
+    Actors: string;
+    Plot: string;
+    Language: string;
+    Country: string;
+    Awards: string;
+    Poster: string;
+    Ratings: IOmdbRatings[];
+    Metascore: string;
+    imdbRating: string;
+    imdbVotes: string;
+    imdbID: string;
+    Type: string;
+    DVD: string;
+    BoxOffice: string;
+    Production: string;
+    Website: string;
+    Response: string;
+}
+
+export interface IOmdbRatings {
+    Source: string;
+    Value: string;
+}
+
 @Injectable()
 export class OmdbApiClientService extends Cacheable {
     private readonly API_URL: string;
@@ -26,22 +59,22 @@ export class OmdbApiClientService extends Cacheable {
         useFirstParamAsKey: true,
         ttl: 2 * MONTH,
     })
-    public async getMovieDetails(imdbId: string) {
+    public async getMovieDetails(imdbId: string): Promise<IOmdbMovieDetails> {
         try {
             // return this.cache.wrap(imdbId, async () => {
-                logger.debug(`[${this.constructor.name}] calling OMDB API`);
-                const params = {
-                    apiKey: this.apiKey,
-                    i: imdbId,
-                };
+            logger.debug(`[${this.constructor.name}] calling OMDB API`);
+            const params = {
+                apiKey: this.apiKey,
+                i: imdbId,
+            };
 
-                const { data, statusText } = await this.httpClient
-                    .get(this.API_URL, { params })
-                    .toPromise();
+            const { data, statusText } = await this.httpClient
+                .get(this.API_URL, { params })
+                .toPromise();
 
-                logger.debug(`[${this.constructor.name}] OMDB API response: ${statusText}`);
+            logger.debug(`[${this.constructor.name}] OMDB API response: ${statusText}`);
 
-                return data;
+            return data;
             // });
 
         } catch (err) {
