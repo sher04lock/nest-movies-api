@@ -218,12 +218,6 @@ export class MoviesService {
         return this.repository.updateOne({ movie_id: movieId }, { $set: { hidden } });
     }
 
-    public async updateProgress({ movieId, userId, currentTime }: ITimeUpdate) {
-        // TODO: update IN USER, so probably in user.service.ts:
-        // {moviesProgress: [movie_id: movieId, currentTime: currentTime]   }
-        // return this.repository.updateOne({})
-    }
-
     public async rateMovie(movieRating: Pick<IMovieRating, 'movie_id' | 'user_id' | 'rating'>) {
         const { movie_id, user_id, rating } = movieRating;
 
