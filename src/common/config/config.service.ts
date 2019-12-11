@@ -22,7 +22,7 @@ export class ConfigService {
         return process.env.MONGO_URL || LOCAL_MONGO;
     }
 
-    get cacheStore(): 'redis' | 'memory' {
+    get cacheStore(): 'redis' | 'memory' | 'none' {
         return process.env.CACHE_STORE as any || MEMORY_CACHE;
     }
 
