@@ -14,6 +14,7 @@ export class CacheConfigService implements CacheOptionsFactory {
         const options = {
             host: configService.redisHost,
             port: configService.redisPort,
+            auth_pass: configService.redisPassword,
             store,
             ttl: 60 * SECOND,
             max: 10_1000,

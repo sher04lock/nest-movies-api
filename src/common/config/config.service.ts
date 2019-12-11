@@ -34,6 +34,10 @@ export class ConfigService {
         return process.env.REDIS_PORT || REDIS_DEFAULT_PORT;
     }
 
+    get redisPassword() {
+        return process.env.REDIS_PASSWORD;
+    }
+
     get awsSecrets(): AwsSecrets {
         return {
             awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
