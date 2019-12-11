@@ -4,7 +4,7 @@ import { CacheConfigService } from './config/cache-config.service';
 import { MemoryCacheProvider } from './providers/memory-cache.provider';
 import { MongoClientProvider } from './providers/mongo-client.provider';
 import { ConfigService } from './config/config.service';
-import { CacheErrorManager } from './cache/cache-error-manager';
+import { CacheManagerEventsHandler } from './cache/cache-error-manager';
 
 @Global()
 @Module({
@@ -14,7 +14,7 @@ import { CacheErrorManager } from './cache/cache-error-manager';
     ],
     providers: [
         Cacheable,
-        CacheErrorManager,
+        CacheManagerEventsHandler,
         ConfigService,
         MemoryCacheProvider,
         MongoClientProvider,
