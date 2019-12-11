@@ -32,7 +32,10 @@ export class MovieRepository extends Repository<IMovieDocument> {
     public search(term: string, { limit, skip }: IQueryParams) {
         const cursor = this.collection
             .find(
-                { $text: { $search: term } },
+                {
+                    hidden: { $ne: true },
+                    $text: { $search: term }
+                },
                 { projection: { score: { $meta: "textScore" }, title: 1, imdb_id: 1, movie_id: 1 } }
             )
             .sort({ score: { $meta: "textScore" } })

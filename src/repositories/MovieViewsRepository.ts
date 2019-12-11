@@ -51,6 +51,7 @@ export class MovieViewsRepository extends Repository<IMovieViewInfo> {
                     as: 'movie'
                 }
             },
+            { $match: { "movie.hidden": { $ne: true } } },
             {
                 $project: {
                     _id: 0,
