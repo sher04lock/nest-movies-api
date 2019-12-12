@@ -8,13 +8,14 @@ export enum IUserRole {
 }
 
 export interface IUserDocument {
-    _id: ObjectId;
+    _id?: ObjectId;
     // movieProgress: Array<{ movie_id: number; currentTime: number }>;
     watchProgress: { [movie_id: string]: number };
     savedForLater: number[];
     username: string;
     passwordHash: string;
     userRole: IUserRole;
+    createdAt?: Date;
 }
 
 @Injectable()

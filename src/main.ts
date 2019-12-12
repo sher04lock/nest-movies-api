@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { logIncomingRequest, logRequestEnd } from './common/logger/log-request';
@@ -20,6 +20,8 @@ async function bootstrap() {
   app.use(requestIdInterceptor(ns));
   app.use(logIncomingRequest);
   app.use(logRequestEnd);
+  app.useGlobalPipes(new ValidationPipe());
+
   await app.listen(port);
   logger.log(`VideoApp API listening on port ${port}`, "Bootstrap");
 }
