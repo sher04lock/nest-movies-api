@@ -34,7 +34,17 @@ export class MovieRepository extends Repository<IMovieDocument> {
             .find(
                 {
                     hidden: { $ne: true },
-                    $text: { $search: term }
+                    $or: [
+                        {
+                            $text: { $search: term }
+                        },
+                        {
+                            title: {
+                                $regex: `.*${term}.*`,
+                                $options: 'i',
+                            }
+                        }
+                    ],
                 },
                 { projection: { score: { $meta: "textScore" }, title: 1, imdb_id: 1, movie_id: 1 } }
             )
