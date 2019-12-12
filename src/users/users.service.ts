@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { UserRepository, IUserDocument, IUserRole } from '../repositories/UserRepository';
 import { ObjectID } from 'mongodb';
 import bcrypt = require('bcrypt');
@@ -12,6 +12,13 @@ export class UsersService {
     constructor(private readonly userRepository: UserRepository) { }
 
     async register({ username, password }: { username: string, password: string }) {
+
+        const userAlreadyExists = await this.userRepository.count({ username });
+
+        if (userAlreadyExists) {
+            throw new BadRequestException('Username already taken.');
+        }
+
         const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
         const userDocument: IUserDocument = {
             username,
