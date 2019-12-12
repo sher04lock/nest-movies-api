@@ -7,6 +7,8 @@ import { IMovieRating } from '../repositories/MovieRatingsRepository';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../users/user.decorator';
 import { IUserDocument } from '../repositories/UserRepository';
+import { OdataOrderByPipe } from '../common/pipes/odata-orderby.pipe';
+import { OdataFilterPipe } from '../common/pipes/odata-filter.pipe';
 
 @Controller('movies')
 export class MoviesController {
@@ -19,6 +21,17 @@ export class MoviesController {
         @Query('limit', new DefaultsTo(100), new ParseIntPipe()) limit: number,
     ) {
         return this.moviesService.getMostRatedMovies({ skip, limit });
+    }
+
+    @Get('/odata')
+    public queryOdata(
+        @Query('$top', new DefaultsTo(0), new ParseIntPipe()) limit?: number,
+        @Query('$skip', new DefaultsTo(0), new ParseIntPipe()) skip?: number,
+        @Query('$orderby', new OdataOrderByPipe()) sort?: object,
+        @Query('$filter', new OdataFilterPipe()) filter?: object,
+    ) {
+
+        return this.moviesService.queryOdata({ filter, limit, skip, sort });
     }
 
     @Get('/last-viewed')

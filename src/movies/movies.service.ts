@@ -105,6 +105,30 @@ export class MoviesService {
         };
     }
 
+    public async queryOdata({ filter, skip, sort, limit }) {
+        const cursor = await this.repository.getFindCursor(filter);
+
+        const count = await cursor.count();
+
+        if (skip) {
+            cursor.skip(skip);
+        }
+
+        if (sort) {
+            cursor.sort(sort);
+        }
+
+        if (limit) {
+            cursor.limit(limit);
+        }
+
+        cursor.project({ _id: 0 });
+
+        const result = await cursor.toArray();
+
+        return { "@odata.count": count, value: result };
+    }
+
     public async getMostRatedMovies(params: IQueryParams) {
         const movies: Array<IMovieRating & { imdb_id: string }> = await this.ratingsRepository.getMostRatedMovies(params);
 

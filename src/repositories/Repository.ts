@@ -59,6 +59,10 @@ export abstract class Repository<T> extends Cacheable implements IRepository<T> 
         return this.db.collection<T>(this.collectionName).find(filter, options).toArray();
     }
 
+    async getFindCursor(filter: FilterQuery<T>) {
+        return this.db.collection<T>(this.collectionName).find(filter);
+    }
+
     async findOne(filter: FilterQuery<T>, options?: FindOneOptions, cacheOptions?: ICacheOptions): Promise<T> {
         if (!cacheOptions?.useCache) {
             return this.db.collection(this.collectionName).findOne<T>(filter, options);
