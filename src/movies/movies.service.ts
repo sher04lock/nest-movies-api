@@ -239,7 +239,8 @@ export class MoviesService {
     }
 
     public async changeMovieVisibility(movieId: number, hidden: boolean) {
-        return this.repository.updateOne({ movie_id: movieId }, { $set: { hidden } });
+        await this.repository.updateOne({ movie_id: movieId }, { $set: { hidden } });
+        await this.ratingsRepository.clearCache();
     }
 
     public async rateMovie(movieRating: Pick<IMovieRating, 'movie_id' | 'user_id' | 'rating'>) {

@@ -50,9 +50,18 @@ export class MovieRatingsRepository extends Repository<IMovieRating> {
             },
         ]);
 
-        const key = `top_rated:skip=${skip},limit=${limit}`;
+        const key = this.getCacheKey(skip, limit);
         return this.cache.wrap(
             key,
             () => cursor.toArray());
+    }
+
+    public clearCache() {
+        const key = this.getCacheKey();
+        return this.cache.del(key);
+    }
+
+    protected getCacheKey(skip: number = 0, limit: number = 20) {
+        return `top_rated:skip=${skip},limit=${limit}`;
     }
 }
