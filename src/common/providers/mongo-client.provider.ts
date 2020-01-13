@@ -24,7 +24,7 @@ function subscribeToCommandsEvents(client: MongoClient) {
     client.on("commandSucceeded", (e) => {
         if (e.commandName !== 'ismaster') {
             logCommand('ok!', e);
-        };
+        }
 
         startedCommands.delete(e.requestId);
     });

@@ -20,6 +20,10 @@ export function Cache(options?: { key?: string, ttl: number, useFirstParamAsKey?
                 throw new InternalServerErrorException('Target class have `cache` property');
             }
 
+            if (!this.cacheEnabled) {
+                return originalMethod.apply(this, args);
+            }
+
             let cacheKey = options?.key
                 || options?.useFirstParamAsKey && args[0]?.toString()
                 || `${className}:${methodName}:${args.map(a => JSON.stringify(a)).join()}`;

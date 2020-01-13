@@ -210,7 +210,7 @@ export class MoviesService {
 
     public async getImdbDetails(imdbId: string): Promise<IOmdbMovieDetails> {
         try {
-            return this.omdbApiClient.getMovieDetails(imdbId);
+            return await this.omdbApiClient.getMovieDetails(imdbId);
         } catch (err) {
             logger.error(err);
             return {} as IOmdbMovieDetails;

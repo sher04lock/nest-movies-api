@@ -3,4 +3,5 @@ import { Cache } from "cache-manager";
 
 export class Cacheable {
     @Inject(CACHE_MANAGER) cache: Cache;
+    cacheEnabled = true;
 }

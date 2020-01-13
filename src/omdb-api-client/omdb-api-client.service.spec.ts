@@ -70,4 +70,15 @@ describe('OmdbApiClientService', () => {
     await service.getMovieDetails(imdbId);
     expect(httpClientSpy).toHaveBeenCalledTimes(2);
   });
+
+  it('should rethrow the error when getting movie details', async () => {
+    service.cacheEnabled = false; // disable cache as cache empty object when error thrown
+    httpClientSpy.mockImplementation(() => {
+      throw new Error('HTTP error!');
+    });
+
+    const imdbId = "1231";
+
+    await expect(service.getMovieDetails(imdbId)).rejects.toThrow();
+  });
 });
