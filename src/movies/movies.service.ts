@@ -12,6 +12,7 @@ import request = require('request');
 import { MEMORY_CACHE_PROVIDER } from '../common/providers/constants';
 import { IUserDocument } from '../repositories/UserRepository';
 import { ObjectId } from 'mongodb';
+import { HOUR } from '../common/cache/constants';
 
 interface IGetS3StreamParams {
     s3ObjectParams: IS3ObjectParams;
@@ -200,10 +201,10 @@ export class MoviesService {
 
             const ytVideoInfo = await ytdl.getBasicInfo(url);
 
-            const [format] = ytVideoInfo.formats.filter(x => x.type && x.type.includes('video/mp4'));
+            const [format] = ytVideoInfo.formats.filter(x => x.mimeType && x.mimeType.includes('video/mp4'));
 
             return format;
-        }, { ttl: 1000 });
+        }, { ttl: 5 * HOUR });
 
         return request({ url: videoFormat.url, method: "GET" });
     }
